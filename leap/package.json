@@ -1,0 +1,13 @@
+{
+  "name": "robotarms-leap",
+  "version": "1.0.0",
+  "description": "Function Router Robot Arms Demo Leap Controller",
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "leapjs": "^0.6.4",
+    "request": "^2.79.0"
+  },
+  "scripts": {
+  }
+}
