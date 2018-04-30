@@ -34,13 +34,26 @@ controller.on('frame', function (frame) {
   frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
     frame.gestures.forEach(function (gesture) {
-      console.log(frame.hands[0].palmPosition);
+      console.log(frame.id + ':' + frame.hands[0].palmPosition);
+      var frameID = frame.id;
+      var x = frame.hands[0].palmPosition[0];
+      var y = frame.hands[0].palmPosition[1];
+      var z = frame.hands[0].palmPosition[2];
+      var c = 0;
+      var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
+                  '/' + y + '/' + z + '/' + c;
+      console.log(fullFixedURL);
 
-      // API call to go here
-
+      var request = require('request');
+      var date1 = new Date();
+      request(fullFixedURL, function (error, response, body) {
+        if (!error) {
+          var date2 = new Date();
+          console.log((date2 - date1) + ' ms' + body);
+        }
+      });
     }); // end frame.gestures.forEach
-
-  } // end if (frame.valid
+  } // end if (frame.valid)
 });
 
 setInterval(function () {
