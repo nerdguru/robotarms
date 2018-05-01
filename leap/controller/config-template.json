@@ -1,4 +1,10 @@
 {
   "loggingOn": false,
-  "fixedURL": "put your fixed public URL base here"
+  "fixedURL": "put your fixed public URL base here",
+  "frURL": "put your Function Router URL here",
+  "serviceID": "put your ServiceID here",
+  "functionName": "put your FunctionName here",
+  "latitude": ,
+  "longitude":,
+  "accessToken": "put your access token here"
 }

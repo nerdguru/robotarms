@@ -12,8 +12,8 @@ if (config.loggingOn) {
   d = new Date();
   var currentTime = d.toLocaleTimeString().replace(/:/g, '-');
   currentTime = currentTime.substring(0, currentTime.length - 3);
-  var logFileName = '../logs/' + d.toLocaleDateString().replace(/\//g, '-')
-                    + '-' + currentTime + '.txt';
+  var logFileName = '../logs/' + d.toLocaleDateString().replace(/\//g, '-') +
+                    '-' + currentTime + '.txt';
 
   console.log('Starting controller, details in: ' + logFileName);
 
@@ -30,28 +30,58 @@ controller.on('frame', function (frame) {
 });
 
 var frameCount = 0;
+var eeURL = ''; // Execution endpoint URL
 controller.on('frame', function (frame) {
   frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
     frame.gestures.forEach(function (gesture) {
+
+      // Build the fixed API call URL
       console.log(frame.id + ':' + frame.hands[0].palmPosition);
       var frameID = frame.id;
       var x = frame.hands[0].palmPosition[0];
       var y = frame.hands[0].palmPosition[1];
       var z = frame.hands[0].palmPosition[2];
       var c = 0;
-      var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
-                  '/' + y + '/' + z + '/' + c;
-      console.log(fullFixedURL);
 
-      var request = require('request');
-      var date1 = new Date();
-      request(fullFixedURL, function (error, response, body) {
-        if (!error) {
-          var date2 = new Date();
-          console.log((date2 - date1) + ' ms' + body);
+      // If a Fixed URL is present, continue
+      if (config.hasOwnProperty('fixedURL')) {
+        var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
+                    '/' + y + '/' + z + '/' + c;
+        console.log('fixedURL: ' + fullFixedURL);
+
+        // Make the fixed API call
+        var request = require('request');
+        var date1 = new Date();
+        request(fullFixedURL, function (error, response, body) {
+          if (!error) {
+            var date2 = new Date();
+            console.log('Fixed: ' + (date2 - date1) + ' ms' + body);
+          }
+        });
+      } else {
+        console.log('No fixedURL, skipping fixed logic');
+      }
+
+      // If a Function Router URL is present, continue
+      if (config.hasOwnProperty('frURL')) {
+        if (eeURL == '') {
+          // Need to perform lookup first
+          console.log('frURL: ' + config.frURL);
+          console.log('serviceID: ' + config.serviceID);
+          console.log('functionName: ' + config.functionName);
+          console.log('latitude: ' + config.latitude);
+          console.log('longitude: ' + config.longitude);
+          console.log('accessToken: ' + config.accessToken);
+          eeURL = config.frURL;
         }
-      });
+
+        // Valid eeURL, make the call
+        console.log('eeURL: ' + eeURL);
+      } else {
+        console.log('No frURL, skipping Function Router logic');
+      }
+
     }); // end frame.gestures.forEach
   } // end if (frame.valid)
 });

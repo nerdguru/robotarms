@@ -1,0 +1,16 @@
+
+
+service: robot
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+
+functions:
+  get:
+    handler: handler.get
+    events:
+      - http:
+          path: robot/{f}/{x}/{y}/{z}/{c}
+          method: get
+          cors: true
