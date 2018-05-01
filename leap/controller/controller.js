@@ -24,13 +24,48 @@ if (config.loggingOn) {
 
 }
 
+// Perform Function Router lookup if needed
+var eeURL = ''; // Execution endpoint URL
+if (config.hasOwnProperty('frURL')) {
+  // Need to perform lookup first
+  console.log('frURL: ' + config.frURL);
+  console.log('serviceID: ' + config.serviceID);
+  console.log('functionName: ' + config.functionName);
+  console.log('latitude: ' + config.latitude);
+  console.log('longitude: ' + config.longitude);
+  console.log('accessToken: ' + config.accessToken);
+  var lookupURL = config.frURL + '/' +
+                  config.serviceID + '/' +
+                  config.functionName +
+                  '?latitude=' + config.latitude + '&' +
+                  'longitude=' + config.longitude + '&' +
+                  'accessToken=' + config.accessToken;
+  console.log('lookupURL: ' + lookupURL);
+
+  var request = require('request');
+  var date1 = new Date();
+  request(lookupURL, function (error, response, body) {
+    if (!error) {
+      var date2 = new Date();
+      console.log('Lookup: ' + (date2 - date1) + ' ms' + body);
+      bodyObj = JSON.parse(body);
+      eeURL = bodyObj.url;
+      eeURL = config.cheatURL;
+      console.log('eeURL set to ' + eeURL);
+    }
+  });
+} else {
+  console.log('No frURL, skipping Function Router logic');
+}
+
+// Instantiate the Leap controller
 var controller = new Leap.Controller();
 controller.on('frame', function (frame) {
   //console.log('Frame: ' + frame.id + ' @ ' + frame.timestamp);
 });
 
+// Set up Leap controller callback
 var frameCount = 0;
-var eeURL = ''; // Execution endpoint URL
 controller.on('frame', function (frame) {
   frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
@@ -57,29 +92,33 @@ controller.on('frame', function (frame) {
           if (!error) {
             var date2 = new Date();
             console.log('Fixed: ' + (date2 - date1) + ' ms' + body);
+          } else {
+            console.log(error);
           }
         });
       } else {
         console.log('No fixedURL, skipping fixed logic');
       }
 
-      // If a Function Router URL is present, continue
-      if (config.hasOwnProperty('frURL')) {
-        if (eeURL == '') {
-          // Need to perform lookup first
-          console.log('frURL: ' + config.frURL);
-          console.log('serviceID: ' + config.serviceID);
-          console.log('functionName: ' + config.functionName);
-          console.log('latitude: ' + config.latitude);
-          console.log('longitude: ' + config.longitude);
-          console.log('accessToken: ' + config.accessToken);
-          eeURL = config.frURL;
-        }
+      // If a Execution Endpoint URL is present, continue
+      if (eeURL != '') {
+        var fluidURL = eeURL + '/' + frameID + '/' + x +
+                    '/' + y + '/' + z + '/' + c;
+        console.log('fluidURL: ' + fullFixedURL);
 
-        // Valid eeURL, make the call
-        console.log('eeURL: ' + eeURL);
+        // Make the fluid API call
+        var request = require('request');
+        var date1 = new Date();
+        request(fluidURL, function (error, response, body) {
+          if (!error) {
+            var date2 = new Date();
+            console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
+          } else {
+            console.log(error);
+          }
+        });
       } else {
-        console.log('No frURL, skipping Function Router logic');
+        console.log('No eeURL, skipping Function Router logic');
       }
 
     }); // end frame.gestures.forEach

@@ -32,23 +32,30 @@ Serverless: Stack update finished...
 Service Information
 service: robot
 stage: dev
-region: us-east-1
+region: us-west-1
 stack: robot-dev
 api keys:
   None
 endpoints:
-  GET - https://XXXXXXXXX.execute-api.us-east-1.amazonaws.com/dev/robot/{f}/{x}/{y}/{z}/{c}
+  GET - https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/{f}/{x}/{y}/{z}/{c}
 functions:
   get: robot-dev-get
   ```
 
   **TAKE NOTE OF THE ENDPOINT URL AS YOU WILL BE USING IT LATER WHEN CONFIGURING THE LEAP CONTROLLER.**
 
+  This will deploy the traditional back end to the AWS Oregon data center by default, which might not be the best choice for you to demonstrate poor latency if you are not physically located in the western hemisphere or western Europe. You can override this default as follows:
+
+  ```bash
+  serverless deploy -r <region specifier such as 'us-east-2'>
+  ```
+
+
 ## Verifying the Deployment with CURL
 Build a simple curl command:
 
 ```
-curl https://XXXXXXXXX.execute-api.us-east-1.amazonaws.com/dev/robot/abc123/1.1/2/3/0
+curl https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/abc123/1.1/2/3/0
 ```
 Example Result (prettified):
 ```json
