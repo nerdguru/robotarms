@@ -69,59 +69,57 @@ var frameCount = 0;
 controller.on('frame', function (frame) {
   frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
-    frame.gestures.forEach(function (gesture) {
 
-      // Build the fixed API call URL
-      console.log(frame.id + ':' + frame.hands[0].palmPosition);
-      var frameID = frame.id;
-      var x = frame.hands[0].palmPosition[0];
-      var y = frame.hands[0].palmPosition[1];
-      var z = frame.hands[0].palmPosition[2];
-      var c = 0;
+    // Build the fixed API call URL
+    console.log(frame.id + ':' + frame.hands[0].palmPosition);
+    var frameID = frame.id;
+    var x = frame.hands[0].palmPosition[0];
+    var y = frame.hands[0].palmPosition[1];
+    var z = frame.hands[0].palmPosition[2];
+    var c = 0;
 
-      // If a Fixed URL is present, continue
-      if (config.hasOwnProperty('fixedURL')) {
-        var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
-                    '/' + y + '/' + z + '/' + c;
-        console.log('fixedURL: ' + fullFixedURL);
+    // If a Fixed URL is present, continue
+    if (config.hasOwnProperty('fixedURL')) {
+      var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
+                  '/' + y + '/' + z + '/' + c;
+      console.log('fixedURL: ' + fullFixedURL);
 
-        // Make the fixed API call
-        var request = require('request');
-        var date1 = new Date();
-        request(fullFixedURL, function (error, response, body) {
-          if (!error) {
-            var date2 = new Date();
-            console.log('Fixed: ' + (date2 - date1) + ' ms' + body);
-          } else {
-            console.log(error);
-          }
-        });
-      } else {
-        console.log('No fixedURL, skipping fixed logic');
-      }
+      // Make the fixed API call
+      var request = require('request');
+      var date1 = new Date();
+      request(fullFixedURL, function (error, response, body) {
+        if (!error) {
+          var date2 = new Date();
+          console.log('Fixed: ' + (date2 - date1) + ' ms' + body);
+        } else {
+          console.log(error);
+        }
+      });
+    } else {
+      console.log('No fixedURL, skipping fixed logic');
+    }
 
-      // If a Execution Endpoint URL is present, continue
-      if (eeURL != '') {
-        var fluidURL = eeURL + '/' + frameID + '/' + x +
-                    '/' + y + '/' + z + '/' + c;
-        console.log('fluidURL: ' + fullFixedURL);
+    // If a Execution Endpoint URL is present, continue
+    if (eeURL != '') {
+      var fluidURL = eeURL + '/' + frameID + '/' + x +
+                  '/' + y + '/' + z + '/' + c;
+      console.log('fluidURL: ' + fluidURL);
 
-        // Make the fluid API call
-        var request = require('request');
-        var date1 = new Date();
-        request(fluidURL, function (error, response, body) {
-          if (!error) {
-            var date2 = new Date();
-            console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
-          } else {
-            console.log(error);
-          }
-        });
-      } else {
-        console.log('No eeURL, skipping Function Router logic');
-      }
+      // Make the fluid API call
+      var request = require('request');
+      var date1 = new Date();
+      request(fluidURL, function (error, response, body) {
+        if (!error) {
+          var date2 = new Date();
+          console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
+        } else {
+          console.log(error);
+        }
+      });
+    } else {
+      console.log('No eeURL, skipping Function Router logic');
+    }
 
-    }); // end frame.gestures.forEach
   } // end if (frame.valid)
 });
 
