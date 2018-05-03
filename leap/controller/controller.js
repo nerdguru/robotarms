@@ -50,7 +50,6 @@ if (config.hasOwnProperty('frURL')) {
       console.log('Lookup: ' + (date2 - date1) + ' ms' + body);
       bodyObj = JSON.parse(body);
       eeURL = bodyObj.url;
-      eeURL = config.cheatURL;
       console.log('eeURL set to ' + eeURL);
     }
   });
@@ -101,7 +100,7 @@ controller.on('frame', function (frame) {
 
     // If a Execution Endpoint URL is present, continue
     if (eeURL != '') {
-      var fluidURL = eeURL + '/' + frameID + '/' + x +
+      var fluidURL = eeURL + frameID + '/' + x +
                   '/' + y + '/' + z + '/' + c;
       console.log('fluidURL: ' + fluidURL);
 
