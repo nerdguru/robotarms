@@ -34,4 +34,18 @@ sudo docker run hello-world
 ##############################################
 
 # Get openwhisk from trunk
-git clone https://github.com/apache/incubator-openwhisk.git openwhisk
+sudo git clone https://github.com/apache/incubator-openwhisk.git openwhisk
+
+# Replace the all.sh and execute it
+sudo all-less-docker.sh all.sh
+sudo mv all.sh openwhisk/tools/ubuntu-setup/all.sh
+
+cd openwhisk/tools/ubuntu-setup
+sudo ./all.sh
+
+# Perform ansible pre build steps
+cd ../../openwhisk/ansible
+sudo ansible-playbook setup.yml
+sudo ansible-playbook prereq.yml
+sudo ansible-playbook couchdb.yml --tags ini
+
