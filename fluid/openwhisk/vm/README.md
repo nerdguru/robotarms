@@ -15,3 +15,13 @@ The `ow-bootsrtap.sh` first installs `git` and the latest Docker before replacin
 ```
 
 The resulting connectivity information will be stored in `~/.wskprops`
+
+When done, the result should be:
+
+```
+ok: whisk API host set to 127.0.0.1
+ok: whisk auth set. Run 'wsk property get --auth' to see the new value.
+{
+    "message": "hello"
+}
+```
