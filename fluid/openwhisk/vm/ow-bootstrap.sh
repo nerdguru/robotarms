@@ -68,3 +68,12 @@ sudo ansible-playbook apigateway.yml
 sudo ansible-playbook openwhisk.yml
 sudo ansible-playbook postdeploy.yml
 
+###################
+# Configure the CLI
+###################
+cd
+cd openwhisk
+./bin/wsk property set --apihost 127.0.0.1
+./bin/wsk property set --auth `cat ansible/files/auth.guest`
+./bin/wsk action invoke /whisk.system/utils/echo -p message hello --result --insecure
+
