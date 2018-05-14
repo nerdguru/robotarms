@@ -37,15 +37,34 @@ sudo docker run hello-world
 sudo git clone https://github.com/apache/incubator-openwhisk.git openwhisk
 
 # Replace the all.sh and execute it
-sudo all-less-docker.sh all.sh
+sudo cp all-less-docker.sh all.sh
 sudo mv all.sh openwhisk/tools/ubuntu-setup/all.sh
 
 cd openwhisk/tools/ubuntu-setup
 sudo ./all.sh
 
 # Perform ansible pre build steps
-cd ../../openwhisk/ansible
+cd
+cd openwhisk/ansible
 sudo ansible-playbook setup.yml
 sudo ansible-playbook prereq.yml
 sudo ansible-playbook couchdb.yml --tags ini
+
+####################################
+# Build OpenWhisk and start services
+####################################
+
+# Build OpenWhisk
+cd
+cd openwhisk
+sudo ./gradlew distDocker
+
+# Start services
+cd ansible
+sudo ansible-playbook couchdb.yml
+sudo ansible-playbook initdb.yml
+sudo ansible-playbook wipe.yml
+sudo ansible-playbook apigateway.yml
+sudo ansible-playbook openwhisk.yml
+sudo ansible-playbook postdeploy.yml
 
