@@ -28,7 +28,7 @@ module.exports.get = (event, context, callback) => {
 
   const response = {
     statusCode: 200,
-    headers: { 'Access-Control-Allow-Origin' : '*' },
+    headers: { 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify(retval),
   };
   callback(null, response);

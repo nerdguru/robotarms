@@ -1,0 +1,9 @@
+{
+  "name": "fluid-function",
+  "version": "1.0.0",
+  "description": "Fluid Function Router Demo Component",
+  "dependencies": {},
+  "devDependencies": {
+    "request": "^2.79.0"
+  }
+}
