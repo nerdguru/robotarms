@@ -14,15 +14,7 @@ function main(params) {
   console.log(setX + ' ' + setY + ' ' + setZ);
 
   // Finally, return the payload
-  retval = {};
-  retval.frameId = f;
-  coords = {};
-  coords.xAxis = setX;
-  coords.yAxis = setY;
-  coords.zAxis = setZ;
-  coords.clockwiseness = c;
-  retval.coordinates = coords;
-  return { payload: JSON.stringify(retval) };
+  return { frameId: f, coordinates: { xAxis: setX, yAxis: setY, zAxis: setZ, clockwiseness: c } };
 }
 
 exports.handler = main;

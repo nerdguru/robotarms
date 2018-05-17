@@ -1,9 +1,13 @@
 {
-  "name": "fluid-function",
+  "name": "openwhisk-nodejs",
   "version": "1.0.0",
-  "description": "Fluid Function Router Demo Component",
-  "dependencies": {},
-  "devDependencies": {
-    "request": "^2.79.0"
-  }
+  "description": "Sample OpenWhisk NodeJS serverless framework service.",
+  "main": "handler.js",
+  "scripts": {
+    "postinstall": "npm link serverless-openwhisk"
+  },
+  "keywords": [
+    "serverless",
+    "openwhisk"
+  ]
 }

@@ -1,4 +1,4 @@
-service: robot-ow
+service: robotarm
 
 provider:
   name: openwhisk
@@ -6,7 +6,7 @@ provider:
 
 functions:
   translate:
-    handler: handler.main
+    handler: translate.handler
 
 plugins:
-    - serverless-openwhisk
+  - serverless-openwhisk
