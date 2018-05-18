@@ -44,13 +44,21 @@ if (config.hasOwnProperty('frURL')) {
 
   var request = require('request');
   var date1 = new Date();
+  var eeIP = '';
+  var eeAuth = '';
   request(lookupURL, function (error, response, body) {
     if (!error) {
       var date2 = new Date();
       console.log('Lookup: ' + (date2 - date1) + ' ms' + body);
       bodyObj = JSON.parse(body);
       eeURL = bodyObj.url;
+      eeAuth = bodyObj.auth;
+      const url = require('url');
+      const myURL = url.parse(eeURL);
+      eeIP = myURL.hostname;
       console.log('eeURL set to ' + eeURL);
+      console.log('eeIP set to ' + eeIP);
+      console.log('eeAuth set to ' + eeAuth);
     }
   });
 } else {
@@ -68,6 +76,7 @@ var frameCount = 0;
 controller.on('frame', function (frame) {
   frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
+
 
     // Build the fixed API call URL
     console.log(frame.id + ':' + frame.hands[0].palmPosition);
@@ -100,21 +109,41 @@ controller.on('frame', function (frame) {
 
     // If a Execution Endpoint URL is present, continue
     if (eeURL != '') {
-      var fluidURL = eeURL + frameID + '/' + x +
-                  '/' + y + '/' + z + '/' + c;
-      console.log('fluidURL: ' + fluidURL);
 
-      // Make the fluid API call
-      var request = require('request');
-      var date1 = new Date();
-      request(fluidURL, function (error, response, body) {
-        if (!error) {
+      if (eeURL.indexOf('amazonaws') !== -1) {
+        var fluidURL = eeURL + frameID + '/' + x +
+                    '/' + y + '/' + z + '/' + c;
+        console.log('Lambda fluidURL: ' + fluidURL);
+
+        // Make the fluid API call
+        var request = require('request');
+        var date1 = new Date();
+        request(fluidURL, function (error, response, body) {
+          if (!error) {
+            var date2 = new Date();
+            console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
+          } else {
+            console.log(error);
+          }
+        });
+      } else {
+        console.log('OpenWhisk fluidURL: ' + eeURL);
+        var openwhisk = require('openwhisk');
+        var options = { ignore_certs: true, apihost: eeIP, api_key: eeAuth };
+        const name = 'robotarm-dev-translate ';
+        const blocking = true;
+        const result = true;
+        const params = { f: frameID, x: x, y: y, z: z, c: c };
+        var ow = openwhisk(options);
+
+        var date1 = new Date();
+        ow.actions.invoke({name, blocking, result, params}).then(result => {
           var date2 = new Date();
-          console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
-        } else {
-          console.log(error);
-        }
-      });
+          console.log('Fluid: ' + (date2 - date1) + ' ms' + JSON.stringify(result));
+        }).catch(err => {
+          console.error('failed to invoke actions', err);
+        });
+      }
     } else {
       console.log('No eeURL, skipping Function Router logic');
     }
@@ -125,7 +154,7 @@ controller.on('frame', function (frame) {
 setInterval(function () {
   var time = frameCount / 2;
   frameCount = 0;
-}, 2000);
+}, 10000);
 
 controller.on('ready', function () {
     console.log('ready');

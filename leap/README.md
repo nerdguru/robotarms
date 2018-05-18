@@ -12,7 +12,7 @@ In order to run this demo, you will need the following:
 ## Installing
 Be sure to have the latest version of Node.js, clone this repo, cd into this folder, and run:
 ```
-node install
+npm install
 ```
 to install dependencies.
 
