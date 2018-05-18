@@ -1,6 +1,21 @@
 # OpenWhisk Fluid API function
 This folder contains a function that translates Leap Motion actions into robot arm instructions.  Two sets of install instructions are provided below.  The first registers the function properly with Function Router so that it can work properly with the larger demo.  The second, optional, set of instructions is provided largely for troubleshooting and additional learning purpose and manually installs the function on an OpenWhisk instance.
 
+## Register the OpenWhisk function with Function Router
+Here, you will register the the function that will be automatically deployed onto your Execution Endpoint when the first lookup occurs.
+
+On the left menu of the Function Router Console, select "Services", and then press "Create".  The resulting screen should look like this:
+
+![Register Function](functionreg.jpg)
+
+Note that Services might contain multiple Functions, hence the terminology.
+
+In the 'Serverlessurl' field, enter `https://github.com/nerdguru/robotarms/fluid/openwhisk/function/serverless.yml` and press "Save".  This is the URL to the `serverless.yml` file provided for this example.  When you press "Save", the function will be prepped for deployment on any Execution Endpoint running OpenWhisk and stored in Function Router.
+
+Be sure to note the generated Service ID, as that will be used to configure the Leap Controller later.
+
+![Service ID](serviceID.jpg)
+
 
 ## Manually Installing and Invoking The Function on OpenWhisk
 
