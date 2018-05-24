@@ -1,4 +1,7 @@
 #!/usr/bin/node
+
+
+
 require('../template/entry');
 var fs = require('fs');
 
@@ -6,155 +9,129 @@ var fs = require('fs');
 var config = JSON.parse(fs.readFileSync('./config.json', 'utf8'));
 console.log(JSON.stringify(config, undefined, 2));
 
-if (config.loggingOn) {
-  // Pipe output to a log file
-  // Build logfile name
-  d = new Date();
-  var currentTime = d.toLocaleTimeString().replace(/:/g, '-');
-  currentTime = currentTime.substring(0, currentTime.length - 3);
-  var logFileName = '../logs/' + d.toLocaleDateString().replace(/\//g, '-') +
-                    '-' + currentTime + '.txt';
+var lookupURL = config.frURL + '/' +
+                config.serviceID + '/' +
+                config.functionName +
+                '?latitude=' + config.latitude + '&' +
+                'longitude=' + config.longitude + '&' +
+                'accessToken=' + config.accessToken;
 
-  console.log('Starting controller, details in: ' + logFileName);
-
-  // Reroute console.log to the log file
-  // Derived from https://stackoverflow.com/questions/32719923/redirecting-stdout-to-file-nodejs
-  var log = fs.createWriteStream(logFileName, { flags: 'a' });
-  process.stdout.write = process.stderr.write = log.write.bind(log);
-
-}
-
-// Perform Function Router lookup if needed
-var eeURL = ''; // Execution endpoint URL
-if (config.hasOwnProperty('frURL')) {
-  // Need to perform lookup first
-  console.log('frURL: ' + config.frURL);
-  console.log('serviceID: ' + config.serviceID);
-  console.log('functionName: ' + config.functionName);
-  console.log('latitude: ' + config.latitude);
-  console.log('longitude: ' + config.longitude);
-  console.log('accessToken: ' + config.accessToken);
-  var lookupURL = config.frURL + '/' +
-                  config.serviceID + '/' +
-                  config.functionName +
-                  '?latitude=' + config.latitude + '&' +
-                  'longitude=' + config.longitude + '&' +
-                  'accessToken=' + config.accessToken;
-  console.log('lookupURL: ' + lookupURL);
-
-  var request = require('request');
-  var date1 = new Date();
-  var eeIP = '';
-  var eeAuth = '';
-  request(lookupURL, function (error, response, body) {
-    if (!error) {
-      var date2 = new Date();
-      console.log('Lookup: ' + (date2 - date1) + ' ms' + body);
-      bodyObj = JSON.parse(body);
-      eeURL = bodyObj.url;
-      eeAuth = bodyObj.auth;
-      const url = require('url');
-      const myURL = url.parse(eeURL);
-      eeIP = myURL.hostname;
-      console.log('eeURL set to ' + eeURL);
-      console.log('eeIP set to ' + eeIP);
-      console.log('eeAuth set to ' + eeAuth);
-    }
-  });
-} else {
-  console.log('No frURL, skipping Function Router logic');
-}
+// Perform the Function Router Lookup
+var lookupRequest = require('request');
+var lookupDate1 = new Date();
+var eeIP = '';
+var eeAuth = '';
+console.log('Lookup trying: ' + lookupURL);
+lookupRequest(lookupURL, function (error, response, body) {
+  if (!error) {
+    var lookupDate2 = new Date();
+    console.log('Lookup: ' + (lookupDate2 - lookupDate1) + ' ms' + body);
+    bodyObj = JSON.parse(body);
+    eeURL = bodyObj.url;
+    eeAuth = bodyObj.auth;
+    var url = require('url');
+    var myURL = url.parse(eeURL);
+    eeIP = myURL.hostname;
+    console.log('eeURL set to ' + eeURL);
+    console.log('eeIP set to ' + eeIP);
+    console.log('eeAuth set to ' + eeAuth);
+  }
+});
 
 // Instantiate the Leap controller
 var controller = new Leap.Controller();
-controller.on('frame', function (frame) {
-  //console.log('Frame: ' + frame.id + ' @ ' + frame.timestamp);
-});
 
 // Set up Leap controller callback
-var frameCount = 0;
+var fluidMoveDone = true;
+var fixedMoveDone = true;
+var request = require('request');
+
 controller.on('frame', function (frame) {
-  frameCount++;
   if (frame.valid && frame.gestures.length > 0) {
-
-
-    // Build the fixed API call URL
+    var frameDate1 = new Date();
     console.log(frame.id + ':' + frame.hands[0].palmPosition);
-    var frameID = frame.id;
+
     var x = frame.hands[0].palmPosition[0];
     var y = frame.hands[0].palmPosition[1];
     var z = frame.hands[0].palmPosition[2];
-    var c = 0;
 
-    // If a Fixed URL is present, continue
-    if (config.hasOwnProperty('fixedURL')) {
-      var fullFixedURL = config.fixedURL + '/' + frameID + '/' + x +
-                  '/' + y + '/' + z + '/' + c;
+    // Fixed URL processing
+    if (fixedMoveDone) { // Ignore incoming frames until the current arm movement is done
+      fixedMoveDone = false;
+
+      var fullFixedURL = config.fixedURL + '/' + frame.id + '/' + x + '/' + y + '/' + z;
       console.log('fixedURL: ' + fullFixedURL);
 
       // Make the fixed API call
-      var request = require('request');
-      var date1 = new Date();
-      request(fullFixedURL, function (error, response, body) {
+      var fixedRequest = require('request');
+      var apiDate1 = new Date();
+      fixedRequest(fullFixedURL, function (error, response, body) {
         if (!error) {
-          var date2 = new Date();
-          console.log('Fixed: ' + (date2 - date1) + ' ms' + body);
+          var apiDate2 = new Date();
+
+          console.log('Fixed: ' + (apiDate2 - apiDate1) + ' ms' + body);
+          var bodyJ = JSON.parse(body);
+
+          //var fixedSurl = config.fixedRobotURL + '/?x=' + bodyJ.coordinates.xAxis + '&y=' + bodyJ.coordinates.yAxis + '&z=' + bodyJ.coordinates.zAxis;
+          var fixedSurl = config.fixedRobotURL + '/?x=' + 1575 + '&y=' + bodyJ.coordinates.yAxis + '&z=' + bodyJ.coordinates.zAxis;
+
+          console.log('Trying: ' + fixedSurl);
+          var fixdPiDate1 = new Date();
+          var fixedPiRequest = require('request');
+          fixedPiRequest(fixedSurl, function (error, response, body) {
+            if (!error) {
+              var fixedPiDate2 = new Date();
+              console.log('Arm: ' + (fixedPiDate2 - fixdPiDate1) + ' ms ' + body);
+              fixedMoveDone = true;
+            } else {
+              console.log(error);
+            }
+          });
         } else {
           console.log(error);
         }
       });
-    } else {
-      console.log('No fixedURL, skipping fixed logic');
     }
 
-    // If a Execution Endpoint URL is present, continue
-    if (eeURL != '') {
+    if (fluidMoveDone) { // Ignore incoming frames until the current arm movement is done
+      fluidMoveDone = false;
 
-      if (eeURL.indexOf('amazonaws') !== -1) {
-        var fluidURL = eeURL + frameID + '/' + x +
-                    '/' + y + '/' + z + '/' + c;
-        console.log('Lambda fluidURL: ' + fluidURL);
+      console.log('fluidURL: ' + eeURL);
+      var openwhisk = require('openwhisk');
+      var options = { ignore_certs: true, apihost: eeIP, api_key: eeAuth };
+      const name = 'robotarm-dev-translate ';
+      const blocking = true;
+      const result = true;
+      const params = { f: frame.id, x: x, y: y, z: z };
+      var ow = openwhisk(options);
 
-        // Make the fluid API call
-        var request = require('request');
-        var date1 = new Date();
-        request(fluidURL, function (error, response, body) {
+      var owDate1 = new Date();
+      ow.actions.invoke( {name, blocking, result, params}).then(result => {
+        var owDate2 = new Date();
+        console.log('Fluid: ' + (owDate2 - owDate1) + ' ms' + JSON.stringify(result));
+
+        var fluidSurl = config.fluidRobotURL + '/?x=' + result.coordinates.xAxis + '&y=' + result.coordinates.yAxis + '&z=' + result.coordinates.zAxis;
+        console.log('Trying: ' + fluidSurl);
+        var fluidPiDate1 = new Date();
+        var fluidPiRequest = require('request');
+        fluidPiRequest(fluidSurl, function (error, response, body) {
           if (!error) {
-            var date2 = new Date();
-            console.log('Fluid: ' + (date2 - date1) + ' ms' + body);
+            var fluidPiDate2 = new Date();
+            console.log('Arm: ' + (fluidPiDate2 - fluidPiDate2) + ' ms ' + body);
+            fluidMoveDone = true;
           } else {
             console.log(error);
           }
         });
-      } else {
-        console.log('OpenWhisk fluidURL: ' + eeURL);
-        var openwhisk = require('openwhisk');
-        var options = { ignore_certs: true, apihost: eeIP, api_key: eeAuth };
-        const name = 'robotarm-dev-translate ';
-        const blocking = true;
-        const result = true;
-        const params = { f: frameID, x: x, y: y, z: z, c: c };
-        var ow = openwhisk(options);
 
-        var date1 = new Date();
-        ow.actions.invoke({name, blocking, result, params}).then(result => {
-          var date2 = new Date();
-          console.log('Fluid: ' + (date2 - date1) + ' ms' + JSON.stringify(result));
-        }).catch(err => {
-          console.error('failed to invoke actions', err);
-        });
-      }
-    } else {
-      console.log('No eeURL, skipping Function Router logic');
+        moveDone = true;
+      }).catch(err => {
+        console.error('failed to invoke actions', err);
+      });
     }
 
   } // end if (frame.valid)
 });
-
-setInterval(function () {
-  var time = frameCount / 2;
-  frameCount = 0;
-}, 10000);
 
 controller.on('ready', function () {
     console.log('ready');
