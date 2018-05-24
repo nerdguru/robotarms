@@ -12,6 +12,6 @@ functions:
     handler: handler.get
     events:
       - http:
-          path: robot/{f}/{x}/{y}/{z}/{c}
+          path: robot/{f}/{x}/{y}/{z}
           method: get
           cors: true

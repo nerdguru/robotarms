@@ -37,7 +37,7 @@ stack: robot-dev
 api keys:
   None
 endpoints:
-  GET - https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/{f}/{x}/{y}/{z}/{c}
+  GET - https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/{f}/{x}/{y}/{z}
 functions:
   get: robot-dev-get
   ```
@@ -55,7 +55,7 @@ functions:
 Build a simple curl command:
 
 ```
-curl https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/abc123/1.1/2/3/0
+curl https://XXXXXXXXX.execute-api.us-west-1.amazonaws.com/dev/robot/abc123/0/0/0
 ```
 Example Result (prettified):
 ```json
@@ -63,10 +63,9 @@ Example Result (prettified):
   "frameId":"abc123",
   "coordinates":
   {
-    "xAxis":200,
-    "yAxis":374,
-    "zAxis":625,
-    "clockwiseness":"0"
+    "xAxis":1575,
+    "yAxis":1600,
+    "zAxis":2000,
   }
 }
 ```
