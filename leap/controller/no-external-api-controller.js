@@ -5,6 +5,9 @@
 // will grab the 'fluidRobotURL' out of config.json and loop over Leap
 // frames.  As a frame comes in, it will call the Pi server named in
 // 'fluidRobotURL' and ignore other frames while that Pi call is handled
+//
+// For testing purposes, this should be the fastest interaction between
+// the Leap and the arm
 
 require('../template/entry');
 var fs = require('fs');
