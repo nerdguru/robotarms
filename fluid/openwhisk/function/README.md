@@ -81,7 +81,7 @@ endpoints (web actions):
 You can use the Serverless CLI to invoke the function, even without an OpenWhisk CLI on your system, as follows:
 
 ```bash
-serverless invoke --function translate --data '{"f": "abc123", "x":1.1, "y":2, "z":3, "c":0}'
+serverless invoke --function translate --data '{"f": "abc123", "x":0, "y":0, "z":0}'
 ```
 
 The Serverless CLI will grab the values from your `.wskprops` for invoking just like it did for deploying and handle all the OpenWhisk API details.  The result should be something like this:
@@ -90,10 +90,9 @@ The Serverless CLI will grab the values from your `.wskprops` for invoking just 
 {
     "frameId": "abc123",
     "coordinates": {
-        "xAxis": 200,
-        "yAxis": 374,
-        "zAxis": 328,
-        "clockwiseness": 0
+        "xAxis": 1575,
+        "yAxis": 1600,
+        "zAxis": 2000
     }
 }
 ```
@@ -102,7 +101,7 @@ The Serverless CLI will grab the values from your `.wskprops` for invoking just 
 You can also invoke the function from CURL, although the text involved gets a little nasty:
 
 ```bash
-curl -u <auth from .wskprops> https://<your public IP address>/api/v1/namespaces/guest/actions/robotarm-dev-translate?blocking=true -X POST -H "Content-Type: application/json" -d '{"f": "abc123", "x":1.1, "y":2, "z":3, "c":0}' -k
+curl -u <auth from .wskprops> https://<your public IP address>/api/v1/namespaces/guest/actions/robotarm-dev-translate?blocking=true -X POST -H "Content-Type: application/json" -d '{"f": "abc123", "x":0, "y":0, "z":0}' -k
 ```
 
 The result is equally nasty (prettified here):
@@ -145,10 +144,9 @@ The result is equally nasty (prettified here):
     "result": {
       "frameId": "abc123",
       "coordinates": {
-        "xAxis": 200,
-        "yAxis": 374,
-        "zAxis": 328,
-        "clockwiseness": 0
+        "xAxis": 1575,
+        "yAxis": 1600,
+        "zAxis": 2000
       }
     },
     "success": true,
