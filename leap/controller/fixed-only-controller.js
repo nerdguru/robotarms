@@ -60,8 +60,6 @@ controller.on('frame', function (frame) {
               console.log(error);
             }
           });
-
-          fixedDone = true;
         } else {
           console.log(error);
         }
