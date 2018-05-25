@@ -1,7 +1,5 @@
 #!/usr/bin/node
 
-
-
 require('../template/entry');
 var fs = require('fs');
 
@@ -41,11 +39,9 @@ lookupRequest(lookupURL, function (error, response, body) {
 // Instantiate the Leap controller
 var controller = new Leap.Controller();
 
-// Set up Leap controller callback
-var fluidMoveDone = true;
-var fixedMoveDone = true;
-var request = require('request');
-
+// Set up Leap frame callback and the queue arrays
+var fluidQueue = [];
+var fixedQueue = [];
 controller.on('frame', function (frame) {
   if (frame.valid && frame.gestures.length > 0) {
     var frameDate1 = new Date();
@@ -55,84 +51,89 @@ controller.on('frame', function (frame) {
     var y = frame.hands[0].palmPosition[1];
     var z = frame.hands[0].palmPosition[2];
 
-    // Fixed URL processing
-    if (fixedMoveDone) { // Ignore incoming frames until the current arm movement is done
-      fixedMoveDone = false;
+    fixedQueue.push({ id: frame.id, x: x, y: y, z: z });
+    fluidQueue.push({ id: frame.id, x: x, y: y, z: z });
 
-      var fullFixedURL = config.fixedURL + '/' + frame.id + '/' + x + '/' + y + '/' + z;
-      console.log('fixedURL: ' + fullFixedURL);
+  } // end if (frame.valid)
 
-      // Make the fixed API call
-      var fixedRequest = require('request');
-      var apiDate1 = new Date();
-      fixedRequest(fullFixedURL, function (error, response, body) {
-        if (!error) {
-          var apiDate2 = new Date();
+  // Main loop
+  var fixedMoveDone = true;
+  var fluidMoveDone = true;
 
-          console.log('Fixed: ' + (apiDate2 - apiDate1) + ' ms' + body);
-          var bodyJ = JSON.parse(body);
+  if (fixedQueue.length > 0 && fixedMoveDone) {
+    fixedMoveDone = false;
+    var thisFixedFrame = fixedQueue.shift();
+    var fullFixedURL = config.fixedURL + '/' + thisFixedFrame.id + '/' + thisFixedFrame.x + '/' + thisFixedFrame.y + '/' + thisFixedFrame.z;
+    console.log('fixedURL: ' + fullFixedURL);
 
-          //var fixedSurl = config.fixedRobotURL + '/?x=' + bodyJ.coordinates.xAxis + '&y=' + bodyJ.coordinates.yAxis + '&z=' + bodyJ.coordinates.zAxis;
-          var fixedSurl = config.fixedRobotURL + '/?x=' + 1575 + '&y=' + bodyJ.coordinates.yAxis + '&z=' + bodyJ.coordinates.zAxis;
+    // Make the fixed API call
+    var fixedRequest = require('request');
+    var apiDate1 = new Date();
+    fixedRequest(fullFixedURL, function (error, response, body) {
+      if (!error) {
+        var apiDate2 = new Date();
 
-          console.log('Trying: ' + fixedSurl);
-          var fixdPiDate1 = new Date();
-          var fixedPiRequest = require('request');
-          fixedPiRequest(fixedSurl, function (error, response, body) {
-            if (!error) {
-              var fixedPiDate2 = new Date();
-              console.log('Arm: ' + (fixedPiDate2 - fixdPiDate1) + ' ms ' + body);
-              fixedMoveDone = true;
-            } else {
-              console.log(error);
-            }
-          });
-        } else {
-          console.log(error);
-        }
-      });
-    }
+        console.log('Fixed: ' + (apiDate2 - apiDate1) + ' ms' + body);
+        var bodyJ = JSON.parse(body);
+        var fixedSurl = config.fixedRobotURL + '/?x=' + bodyJ.coordinates.xAxis + '&y=' + bodyJ.coordinates.yAxis + '&z=' + bodyJ.coordinates.zAxis;
 
-    if (fluidMoveDone) { // Ignore incoming frames until the current arm movement is done
-      fluidMoveDone = false;
-
-      console.log('fluidURL: ' + eeURL);
-      var openwhisk = require('openwhisk');
-      var options = { ignore_certs: true, apihost: eeIP, api_key: eeAuth };
-      const name = 'robotarm-dev-translate ';
-      const blocking = true;
-      const result = true;
-      const params = { f: frame.id, x: x, y: y, z: z };
-      var ow = openwhisk(options);
-
-      var owDate1 = new Date();
-      ow.actions.invoke( {name, blocking, result, params}).then(result => {
-        var owDate2 = new Date();
-        console.log('Fluid: ' + (owDate2 - owDate1) + ' ms' + JSON.stringify(result));
-
-        var fluidSurl = config.fluidRobotURL + '/?x=' + result.coordinates.xAxis + '&y=' + result.coordinates.yAxis + '&z=' + result.coordinates.zAxis;
-        console.log('Trying: ' + fluidSurl);
-        var fluidPiDate1 = new Date();
-        var fluidPiRequest = require('request');
-        fluidPiRequest(fluidSurl, function (error, response, body) {
+        console.log('Trying: ' + fixedSurl);
+        var fixdPiDate1 = new Date();
+        var fixedPiRequest = require('request');
+        fixedPiRequest(fixedSurl, function (error, response, body) {
           if (!error) {
-            var fluidPiDate2 = new Date();
-            console.log('Arm: ' + (fluidPiDate2 - fluidPiDate2) + ' ms ' + body);
-            fluidMoveDone = true;
+            var fixedPiDate2 = new Date();
+            console.log('Arm: ' + (fixedPiDate2 - fixdPiDate1) + ' ms ' + body);
+            fixedMoveDone = true;
           } else {
             console.log(error);
           }
         });
+      } else {
+        console.log(error);
+      }
+    });
+  }
 
-        moveDone = true;
-      }).catch(err => {
-        console.error('failed to invoke actions', err);
+  if (fluidQueue.length > 0 && fluidMoveDone) {
+    fluidMoveDone = false;
+    var thisFluidFrame = fluidQueue.shift();
+
+    console.log('fluidURL: ' + eeURL);
+    var openwhisk = require('openwhisk');
+    var options = { ignore_certs: true, apihost: eeIP, api_key: eeAuth };
+    const name = 'robotarm-dev-translate ';
+    const blocking = true;
+    const result = true;
+    const params = { f: thisFluidFrame.id, x: thisFluidFrame.x, y: thisFluidFrame.y, z: thisFluidFrame.z };
+    var ow = openwhisk(options);
+
+    var owDate1 = new Date();
+    ow.actions.invoke( {name, blocking, result, params}).then(result => {
+      var owDate2 = new Date();
+      console.log('Fluid: ' + (owDate2 - owDate1) + ' ms' + JSON.stringify(result));
+
+      var fluidSurl = config.fluidRobotURL + '/?x=' + result.coordinates.xAxis + '&y=' + result.coordinates.yAxis + '&z=' + result.coordinates.zAxis;
+      console.log('Trying: ' + fluidSurl);
+      var fluidPiDate1 = new Date();
+      var fluidPiRequest = require('request');
+      fluidPiRequest(fluidSurl, function (error, response, body) {
+        if (!error) {
+          var fluidPiDate2 = new Date();
+          console.log('Arm: ' + (fluidPiDate2 - fluidPiDate2) + ' ms ' + body);
+          fluidMoveDone = true;
+        } else {
+          console.log(error);
+        }
       });
-    }
+    }).catch(err => {
+      console.error('failed to invoke actions', err);
+    });
+  }
 
-  } // end if (frame.valid)
 });
 
+// Other Leap callbacks
 controller.on('ready', function () {
     console.log('ready');
   });
